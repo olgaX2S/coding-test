@@ -1,27 +1,49 @@
-import React, { Component } from 'react';
-import DiscoverBlock from './DiscoverBlock/components/DiscoverBlock';
-import '../styles/_discover.scss';
+import React, { useState, useEffect } from "react";
+import DiscoverBlock from "./DiscoverBlock/components/DiscoverBlock";
+import "../styles/_discover.scss";
+import {
+  getToken,
+  getCategories,
+  getPlaylists,
+  getReleases,
+} from "../../../services/spotifyService";
 
-export default class Discover extends Component {
-  constructor() {
-    super();
+export default function Discover() {
+  const [newReleases, setNewReleases] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
+  const [categories, setCategories] = useState([]);
 
-    this.state = {
-      newReleases: [],
-      playlists: [],
-      categories: []
+  useEffect(() => {
+    const getAllInfo = async () => {
+      try {
+        const token = await getToken();
+        const { items: releases } = await getReleases(token);
+        setNewReleases(releases);
+        const { items: playlists } = await getPlaylists(token);
+        setPlaylists(playlists);
+        const { items: categories } = await getCategories(token);
+        setCategories(categories);
+      } catch (error) {
+        alert(error.message);
+      }
     };
-  }
+    getAllInfo();
+  }, []);
 
-  render() {
-    const { newReleases, playlists, categories } = this.state;
-
-    return (
-      <div className="discover">
-        <DiscoverBlock text="RELEASED THIS WEEK" id="released" data={newReleases} />
-        <DiscoverBlock text="FEATURED PLAYLISTS" id="featured" data={playlists} />
-        <DiscoverBlock text="BROWSE" id="browse" data={categories} imagesKey="icons" />
-      </div>
-    );
-  }
+  return (
+    <div className="discover">
+      <DiscoverBlock
+        text="RELEASED THIS WEEK"
+        id="released"
+        data={newReleases}
+      />
+      <DiscoverBlock text="FEATURED PLAYLISTS" id="featured" data={playlists} />
+      <DiscoverBlock
+        text="BROWSE"
+        id="browse"
+        data={categories}
+        imagesKey="icons"
+      />
+    </div>
+  );
 }
