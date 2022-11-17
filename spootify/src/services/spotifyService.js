@@ -4,22 +4,41 @@ import config from "../config";
 
 const { api } = config;
 
-const instance = axios.create({
+const authInstance = axios.create({
+  baseURL: api.authUrl,
+});
+
+authInstance.defaults.headers.post["Content-Type"] =
+  "application/x-www-form-urlencoded";
+
+const instanceWithToken = axios.create({
   baseURL: `${api.baseUrl}/browse`,
   params: {
     locale: "en_US",
   },
 });
 
+instanceWithToken.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      config.headers["Authorization"] = "Bearer " + token;
+    }
+    return config;
+  },
+  (error) => {
+    Promise.reject(error);
+  }
+);
+
 export async function getToken() {
   const {
     data: { access_token: token },
-  } = await axios.post(
-    api.authUrl,
+  } = await authInstance.post(
+    "",
     qs.stringify({ grant_type: "client_credentials" }),
     {
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
         Authorization: `Basic ${btoa(`${api.clientId}:${api.clientSecret}`)}`,
       },
     }
@@ -27,29 +46,23 @@ export async function getToken() {
   return token;
 }
 
-export async function getReleases(token) {
+export async function getReleases() {
   const {
     data: { albums },
-  } = await instance.get(`/new-releases`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  } = await instanceWithToken.get(`/new-releases`);
   return albums;
 }
 
-export async function getPlaylists(token) {
+export async function getPlaylists() {
   const {
     data: { playlists },
-  } = await instance.get(`/featured-playlists`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  } = await instanceWithToken.get(`/featured-playlists`);
   return playlists;
 }
 
-export async function getCategories(token) {
+export async function getCategories() {
   const {
     data: { categories },
-  } = await instance.get(`/categories`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  } = await instanceWithToken.get(`/categories`);
   return categories;
 }

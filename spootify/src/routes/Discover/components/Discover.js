@@ -17,12 +17,15 @@ export default function Discover() {
     const getAllInfo = async () => {
       try {
         const token = await getToken();
-        const { items: releases } = await getReleases(token);
-        setNewReleases(releases);
-        const { items: playlists } = await getPlaylists(token);
-        setPlaylists(playlists);
-        const { items: categories } = await getCategories(token);
-        setCategories(categories);
+        sessionStorage.setItem("token", token);
+        const [releases, playlists, categories] = await Promise.all([
+          getReleases(),
+          getPlaylists(),
+          getCategories(),
+        ]);
+        setNewReleases(releases.items);
+        setPlaylists(playlists.items);
+        setCategories(categories.items);
       } catch (error) {
         alert(error.message);
       }
